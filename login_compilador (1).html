@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – Mini Compilador Receta Médica</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2230;
+      --border:    #30363d;
+      --accent:    #1f6feb;
+      --accent2:   #388bfd;
+      --green:     #3fb950;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --error:     #f85149;
+    }
+
+    html, body { height: 100%; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); overflow: hidden; }
+
+    .grid-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px; opacity: 0.15;
+    }
+    .glow { position: fixed; z-index: 0; border-radius: 50%; filter: blur(120px); opacity: 0.1; }
+    .glow-1 { width: 500px; height: 500px; background: var(--accent); top: -100px; left: -100px; }
+    .glow-2 { width: 400px; height: 400px; background: #1a7f64; bottom: -80px; right: -80px; }
+
+    .wrapper { position: relative; z-index: 1; display: flex; height: 100vh; }
+
+    /* ── LEFT PANEL ── */
+    .panel-left {
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
+      padding: 48px 52px; border-right: 1px solid var(--border);
+      background: rgba(22,27,34,0.6); backdrop-filter: blur(6px);
+    }
+
+    .course-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+      color: var(--accent2); background: rgba(31,111,235,.12); border: 1px solid rgba(31,111,235,.28);
+      padding: 5px 12px; border-radius: 20px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 28px;
+    }
+    .course-badge::before {
+      content: ''; width: 7px; height: 7px; background: var(--green); border-radius: 50%;
+      box-shadow: 0 0 6px var(--green); animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    .panel-left h1 { font-size: 20px; font-weight: 700; line-height: 1.35; color: var(--text); margin-bottom: 6px; }
+    .panel-left .subtitle { font-size: 11px; color: var(--muted); margin-bottom: 36px; font-family: 'JetBrains Mono', monospace; }
+
+    .team-label { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+
+    .team-list { display: flex; flex-direction: column; gap: 9px; }
+
+    .member {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 11px 14px;
+      transition: border-color .2s, transform .15s;
+    }
+    .member:hover { border-color: var(--accent); transform: translateX(3px); }
+
+    .avatar {
+      width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent) 0%, #1a7f64 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .member-info { min-width: 0; }
+    .member-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.25; }
+    .member-name .firstname { color: var(--accent2); }
+    .member-role { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
+
+    /* ── RIGHT PANEL ── */
+    .panel-right {
+      width: 420px; flex-shrink: 0;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 56px 44px; background: rgba(13,17,23,0.88); backdrop-filter: blur(10px);
+    }
+
+    .logo-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+    .logo-icon {
+      width: 46px; height: 46px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--accent) 0%, #1a7f64 100%);
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .logo-text .top { font-size: 14px; font-weight: 700; color: var(--text); }
+    .logo-text .bot { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+    .login-card {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 30px 26px;
+    }
+    .login-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 5px; }
+    .login-card p { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; }
+
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-wrap .icon { position: absolute; left: 11px; font-size: 14px; pointer-events: none; opacity: .5; }
+    .input-wrap input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px 10px 36px; font-size: 13px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text); outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input::placeholder { color: var(--muted); opacity: .55; }
+    .input-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(31,111,235,.18); }
+
+    .error-msg {
+      background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.3);
+      color: var(--error); font-size: 12px; border-radius: 6px;
+      padding: 8px 12px; margin-bottom: 14px; display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    .btn-login {
+      width: 100%; padding: 11px; background: var(--accent); color: #fff;
+      font-size: 13px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer;
+      transition: background .2s, box-shadow .2s, transform .1s; letter-spacing: .02em;
+    }
+    .btn-login:hover { background: var(--accent2); box-shadow: 0 0 18px rgba(31,111,235,.4); }
+    .btn-login:active { transform: scale(.98); }
+
+    .hint { margin-top: 18px; text-align: center; font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .hint span { color: var(--accent2); }
+
+    /* ── APP FRAME ── */
+    #app-frame { display: none; position: fixed; inset: 0; z-index: 100; flex-direction: column; }
+    #app-frame.visible { display: flex; }
+
+    .app-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 9px 22px; flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-logo { width: 26px; height: 26px; border-radius: 6px; background: linear-gradient(135deg, var(--accent), #1a7f64); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .topbar-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .user-chip { display: flex; align-items: center; gap: 7px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 11px 3px 5px; font-size: 12px; color: var(--text); }
+    .user-chip .dot { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #1a7f64); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+    .btn-logout { background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.25); color: var(--error); font-size: 11px; font-weight: 600; border-radius: 6px; padding: 5px 11px; cursor: pointer; transition: background .2s; }
+    .btn-logout:hover { background: rgba(248,81,73,.2); }
+
+    #site-iframe { flex: 1; border: none; width: 100%; background: #fff; }
+
+    @media (max-width: 768px) { .panel-left { display: none; } .panel-right { width: 100%; padding: 36px 24px; } }
+  </style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<!-- LOGIN -->
+<div class="wrapper" id="login-screen">
+
+  <div class="panel-left">
+    <div class="course-badge">Teoría de Computación</div>
+    <h1>Mini Compilador para<br>Recetas Médicas</h1>
+    <p class="subtitle">// reducción de errores en indicaciones hospitalarias</p>
+
+    <div class="team-label">Equipo de desarrollo</div>
+
+    <div class="team-list">
+
+      <div class="member">
+        <div class="avatar">HA</div>
+        <div class="member-info">
+          <div class="member-name">Hilario Arias &nbsp;<span class="firstname">Asiri Illari</span></div>
+          <div class="member-role">integrante_01 · integrante_02</div>
+        </div>
+      </div>
+
+      <div class="member">
+        <div class="avatar">RB</div>
+        <div class="member-info">
+          <div class="member-name">Rejanovinshi Benavente &nbsp;<span class="firstname">Cielo de los Ángeles</span></div>
+          <div class="member-role">integrante_03 · integrante_04</div>
+        </div>
+      </div>
+
+      <div class="member">
+        <div class="avatar">VM</div>
+        <div class="member-info">
+          <div class="member-name">Valenzuela Miguel &nbsp;<span class="firstname">Gianella Magaly</span></div>
+          <div class="member-role">integrante_05 · integrante_06</div>
+        </div>
+      </div>
+
+      <div class="member">
+        <div class="avatar">VV</div>
+        <div class="member-info">
+          <div class="member-name">Vargas Villacrez &nbsp;<span class="firstname">Yosef Keith</span></div>
+          <div class="member-role">integrante_07 · integrante_08</div>
+        </div>
+      </div>
+
+      <div class="member">
+        <div class="avatar">RO</div>
+        <div class="member-info">
+          <div class="member-name">Retuerto Olivera &nbsp;<span class="firstname">Luis Matias</span></div>
+          <div class="member-role">integrante_09 · integrante_10</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="panel-right">
+    <div class="logo-wrap">
+      <div class="logo-icon">⚕️</div>
+      <div class="logo-text">
+        <div class="top">Mini Compilador</div>
+        <div class="bot">// receta médica · v1.0</div>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <h2>Iniciar sesión</h2>
+      <p>Ingresa tus credenciales para acceder al compilador</p>
+
+      <div class="error-msg" id="error-msg">⚠ Usuario o contraseña incorrectos</div>
+
+      <div class="field">
+        <label>Usuario</label>
+        <div class="input-wrap">
+          <span class="icon">👤</span>
+          <input type="text" id="username" placeholder="admi" autocomplete="username" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Contraseña</label>
+        <div class="input-wrap">
+          <span class="icon">🔒</span>
+          <input type="password" id="password" placeholder="••••" autocomplete="current-password" />
+        </div>
+      </div>
+
+      <button class="btn-login" id="btn-login">Ingresar al compilador →</button>
+
+      <div class="hint">acceso: <span>admi</span> / <span>123</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- APP -->
+<div id="app-frame">
+  <div class="app-topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">⚕️</div>
+      <span class="topbar-title">Mini Compilador – Receta Médica</span>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="dot" id="user-dot">A</div>
+        <span id="user-label">admi</span>
+      </div>
+      <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+    </div>
+  </div>
+  <iframe id="site-iframe" src="https://compilador-recetas-flask-vercel.vercel.app/" title="Mini Compilador Receta Médica"></iframe>
+</div>
+
+<script>
+  const btn    = document.getElementById('btn-login');
+  const errMsg = document.getElementById('error-msg');
+  const screen = document.getElementById('login-screen');
+  const appFrm = document.getElementById('app-frame');
+  const usrLbl = document.getElementById('user-label');
+  const usrDot = document.getElementById('user-dot');
+  const logout = document.getElementById('btn-logout');
+  const userIn = document.getElementById('username');
+  const passIn = document.getElementById('password');
+
+  function tryLogin() {
+    if (userIn.value.trim() === 'admi' && passIn.value.trim() === '123') {
+      errMsg.classList.remove('visible');
+      usrLbl.textContent = 'admi';
+      usrDot.textContent = 'A';
+      screen.style.display = 'none';
+      appFrm.classList.add('visible');
+    } else {
+      errMsg.classList.add('visible');
+      passIn.value = '';
+      passIn.focus();
+    }
+  }
+
+  btn.addEventListener('click', tryLogin);
+  [userIn, passIn].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); }));
+  logout.addEventListener('click', () => {
+    appFrm.classList.remove('visible');
+    screen.style.display = 'flex';
+    userIn.value = ''; passIn.value = ''; userIn.focus();
+  });
+</script>
+</body>
+</html>
