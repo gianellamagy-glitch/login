@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Analizador de Recetas PDF</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* LOGIN */
+    .login {
+      width: 40%;
+      background: #111827;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login input {
+      margin: 10px;
+      padding: 10px;
+      width: 70%;
+      border-radius: 8px;
+      border: none;
+    }
+
+    .login button {
+      padding: 10px 20px;
+      background: #3b82f6;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* PANEL */
+    .panel {
+      width: 60%;
+      padding: 20px;
+      background: #0b1220;
+      overflow-y: auto;
+    }
+
+    .box {
+      background: #1f2937;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    .token {
+      display: inline-block;
+      background: #334155;
+      padding: 5px 10px;
+      margin: 5px;
+      border-radius: 5px;
+    }
+
+    .aut {
+      background: #0ea5e9;
+      padding: 5px;
+      border-radius: 5px;
+      margin-top: 5px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="login">
+  <h2>LOGIN</h2>
+  <input type="text" placeholder="Usuario">
+  <input type="password" placeholder="Contraseña">
+  <button onclick="enter()">Ingresar</button>
+</div>
+
+<!-- PANEL -->
+<div class="panel">
+  <h2>📄 Analizador de PDF de Recetas</h2>
+
+  <div class="box">
+    <input type="file" id="pdfFile" accept=".pdf">
+    <button onclick="procesarPDF()">Leer PDF</button>
+  </div>
+
+  <div class="box">
+    <h3>🔹 Tokens</h3>
+    <div id="tokens"></div>
+  </div>
+
+  <div class="box">
+    <h3>🔹 Autómatas por token</h3>
+    <div id="automatas"></div>
+  </div>
+
+  <div class="box">
+    <h3>🔹 Análisis sintáctico</h3>
+    <div id="sintaxis"></div>
+  </div>
+</div>
+
+<script>
+function enter() {
+  alert("Acceso simulado");
+}
+
+/* 🔥 SIMULACIÓN DE LECTURA DE PDF */
+function procesarPDF() {
+  // Simulamos texto extraído del PDF
+  let texto = "RECETA arroz 2 huevos aceite mezclar cocinar servir";
+
+  let tokens = texto.split(" ");
+
+  mostrarTokens(tokens);
+  mostrarAutomatas(tokens);
+  analisisSintactico(tokens);
+}
+
+/* TOKENS */
+function mostrarTokens(tokens) {
+  let div = document.getElementById("tokens");
+  div.innerHTML = "";
+
+  tokens.forEach(t => {
+    div.innerHTML += `<span class="token">${t}</span>`;
+  });
+}
+
+/* AUTÓMATAS SIMULADOS */
+function mostrarAutomatas(tokens) {
+  let div = document.getElementById("automatas");
+  div.innerHTML = "";
+
+  tokens.forEach(t => {
+    let tipo = "";
+
+    if (!isNaN(t)) tipo = "AUT-M1 (Número)";
+    else if (t === "arroz" || t === "huevos" || t === "aceite") tipo = "AUT-M2 (Ingrediente)";
+    else tipo = "AUT-M3 (Verbo/Acción)";
+
+    div.innerHTML += `<div class="aut">${t} → ${tipo}</div>`;
+  });
+}
+
+/* ANÁLISIS SINTÁCTICO SIMPLE */
+function analisisSintactico(tokens) {
+  let div = document.getElementById("sintaxis");
+
+  let estructura = "RECETA → INGREDIENTES + ACCIONES";
+
+  let ingredientes = tokens.filter(t =>
+    ["arroz","huevos","aceite"].includes(t)
+  );
+
+  let acciones = tokens.filter(t =>
+    ["mezclar","cocinar","servir"].includes(t)
+  );
+
+  div.innerHTML = `
+    <p><b>Estructura:</b> ${estructura}</p>
+    <p><b>Ingredientes:</b> ${ingredientes.join(", ")}</p>
+    <p><b>Acciones:</b> ${acciones.join(", ")}</p>
+  `;
+}
+</script>
+
+</body>
+</html>
